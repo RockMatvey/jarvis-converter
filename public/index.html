@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>J.A.R.V.I.S - MP3 & MP4 Converter</title>
+    <meta name="description" content="Convert YouTube videos to MP3 or MP4 format effortlessly with J.A.R.V.I.S.">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #0d0d0d, #1c1c1c);
+            font-family: 'Arial', sans-serif;
+            color: #e0e0e0;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 64px;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+            color: #00e1ff;
+        }
+
+        h2 {
+            font-size: 24px;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+            text-transform: capitalize;
+            opacity: 0.8;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            width: 100%;
+            border: 2px solid #00e1ff;
+            border-radius: 25px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            background: transparent;
+            color: #e0e0e0;
+            text-align: center; /* Центрирование текста в поле ввода */
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .button {
+            padding: 15px 30px;
+            background-color: #00e1ff;
+            border: none;
+            border-radius: 30px;
+            color: black;
+            font-size: 18px;
+            cursor: pointer;
+            transition: background 0.3s ease-in-out;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background-color: #00b3cc;
+        }
+
+        .button:active {
+            transform: scale(0.98);
+        }
+
+        .video-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .video-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .download-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        img {
+            width: 200px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" style="text-decoration: none; color: #00e1ff;">
+            <h1>J.A.R.V.I.S</h1>
+        </a>
+        <h2>MP3 & MP4 Converter</h2>
+        <input type="text" id="video-url" placeholder="Paste YouTube URL here">
+        <div class="btn-container">
+            <button class="button" id="fetch-video" aria-label="Load Video">Load Video</button>
+        </div>
+    </div>
+
+    <div id="video-list"></div> <!-- Контейнер для видео -->
+
+    <script>
+        document.getElementById('fetch-video').addEventListener('click', async () => {
+            const videoUrl = document.getElementById('video-url').value;
+            if (!videoUrl) {
+                alert('Please enter a valid URL.');
+                return;
+            }
+
+            try {
+                // Получение информации о видео
+                const response = await fetch(`/get-video-info?url=${encodeURIComponent(videoUrl)}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert('Error fetching video information');
+                    return;
+                }
+
+                // Получаем список текущих видео
+                const videoList = document.getElementById('video-list');
+
+                // Проверка количества видео
+                if (videoList.children.length >= 5) {
+                    // Удаляем самое нижнее видео
+                    videoList.removeChild(videoList.lastChild);
+                }
+
+                // Создание нового контейнера для видео
+                const videoContainer = document.createElement('div');
+                videoContainer.className = 'video-container';
+
+                // Добавление информации о видео
+                videoContainer.innerHTML = `
+                    <div class="video-title">${data.title}</div>
+                    <img src="${data.thumbnailUrl}" alt="Video Thumbnail">
+                    <div class="download-buttons">
+                        <a href="/download?url=${encodeURIComponent(videoUrl)}&title=${encodeURIComponent(data.title)}&format=mp3" class="button">Download MP3</a>
+                        <a href="/download?url=${encodeURIComponent(videoUrl)}&title=${encodeURIComponent(data.title)}&format=mp4" class="button">Download MP4</a>
+                    </div>
+                `;
+
+                // Добавление нового контейнера в верхнюю часть списка видео
+                videoList.insertBefore(videoContainer, videoList.firstChild);
+
+                // Сброс поля ввода
+                document.getElementById('video-url').value = '';
+            } catch (error) {
+                alert('An error occurred while fetching video information. Please try again later.');
+                console.error('Fetch error:', error);
+            }
+        });
+    </script>
+</body>
+</html>
